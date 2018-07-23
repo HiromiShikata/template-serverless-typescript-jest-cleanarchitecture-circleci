@@ -1,0 +1,74 @@
+defaults: &defaults
+  docker:
+    - image: circleci/node:8
+  working_directory: ~/repo
+
+attach_workspace: &attach_workspace
+  attach_workspace:
+    at: ~/
+
+version: 2
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package-lock.json" }}
+      - run: sudo su -c 'echo "deb http://deb.debian.org/debian jessie-backports main" >> /etc/apt/sources.list'
+      - run: sudo apt-get update
+      - run: sudo apt install -t jessie-backports  openjdk-8-jre-headless ca-certificates-java awscli
+        run: mkdir ~/.aws
+      - run: npm i
+      - save_cache:
+          paths:
+            - ~/repo/node_modules
+          key: v1-dependencies-{{ checksum "package-lock.json" }}
+
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - repo
+            - ./.aws
+
+  test:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - run: npm t
+
+  test_deployed_server:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - run: npx sls deploy -s deploytest -r us-east-1 --aws-profile ci
+      - run: npx sls remove -s deploytest -r us-east-1 --aws-profile ci
+
+  deploy:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - run: npx sls deploy -s prod -r ap-northeast-1 --aws-profile ci
+
+
+workflows:
+  version: 2
+  build-test-deploy:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+      - test_deployed_server:
+
+          requires:
+            - build
+      - deploy:
+          requires:
+            - build
+            - test
+            - test_deployed_server
+          filters:
+            branches:
+              only: /^master$/
