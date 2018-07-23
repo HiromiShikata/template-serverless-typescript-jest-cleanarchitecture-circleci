@@ -4,9 +4,19 @@
     "lib": [
       "es5",
       "es2015.promise"
+    ],
+    "outDir": "dist",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "types": [
+      "node"
     ]
   },
+  "include": [
+    "src/**/*.ts"
+  ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/**/*.test.ts"
   ]
 }
