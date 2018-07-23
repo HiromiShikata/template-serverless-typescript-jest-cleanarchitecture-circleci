@@ -32,6 +32,11 @@ jobs:
             - repo
             - ./.aws
 
+  lint:
+    <<: *defaults
+    steps:
+      - *attach_workspace
+      - run: npm run lint
   test:
     <<: *defaults
     steps:
