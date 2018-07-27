@@ -47,8 +47,8 @@ jobs:
     <<: *defaults
     steps:
       - *attach_workspace
-      - run: npx sls deploy -s deploytest -r us-east-1 --aws-profile ci
-      - run: npx sls remove -s deploytest -r us-east-1 --aws-profile ci
+      - run: npx sls deploy -s deploytest -r us-east-1
+      - run: npx sls remove -s deploytest -r us-east-1
 
   deploy:
     <<: *defaults
